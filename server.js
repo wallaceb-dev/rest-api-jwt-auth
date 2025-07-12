@@ -13,9 +13,14 @@ mongoose.connect(process.env.MONGODB_URI);
 app.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
+    const existingUser = await User.findOne({ username });
+
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
 
     const user = new User({ username, password });
     await user.save();
+    
     res.json({ user });
   } catch (error) {
     res.status(500).json({ message: "Failed to register a new user" });
