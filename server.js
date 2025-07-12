@@ -4,10 +4,13 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import User from "./models/User.js";
 import jwt from "jsonwebtoken";
+import setupSwagger from "./swagger.js";
 
 const app = express();
 
 app.use(bodyParser.json());
+
+setupSwagger(app);
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -21,6 +24,32 @@ const generateToken = (user) => {
   );
 };
 
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token created
+ *       400:
+ *         description: User already exists
+ */
 app.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -39,6 +68,32 @@ app.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Log in a user and return a token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token returned
+ *       401:
+ *         description: Invalid Credentials
+ */
 app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -67,6 +122,36 @@ function authenticateToken(req, res, next) {
   });
 }
 
+/**
+ * @swagger
+ * /profile:
+ *   get:
+ *     summary: Give access to sensitive data
+ *     tags: [Auth]
+ *     security:
+ *      - Bearer: []
+ *     responses:
+ *       200:
+ *         description: Message and user returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *       401:
+ *         description: Unauthorized – token not provided or invalid
+ *       403:
+ *         description: Forbidden – token valid but not enough privileges
+ */
 app.get("/profile", authenticateToken, async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json({ message: "Welcome to the protected area", user });
