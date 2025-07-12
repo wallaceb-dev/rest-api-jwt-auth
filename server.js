@@ -32,10 +32,26 @@ app.post("/register", async (req, res) => {
     const user = new User({ username, password });
     await user.save();
     const token = generateToken(user);
-    
+
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: "Failed to register a new user" });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+
+    if (!user || !user.comparePassword(password))
+      return res.status(401).json({ message: "Invalid Credentials" });
+
+    const token = generateToken(user);
+
+    return res.json({ token });
+  } catch (error) {
+    res.status(500).json({ message: "Log in failed" });
   }
 });
 
