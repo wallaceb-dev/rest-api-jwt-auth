@@ -55,6 +55,23 @@ app.post("/login", async (req, res) => {
   }
 });
 
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader?.split(" ")[1];
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
+    if (error) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
+
+app.get("/profile", authenticateToken, async (req, res) => {
+  const user = await User.findById(req.user.id).select("-password");
+  res.json({ message: "Welcome to the protected area", user });
+});
+
 app.listen(process.env.PORT, () =>
   console.log(`Rodando em http://localhost:${process.env.PORT}`)
 );
