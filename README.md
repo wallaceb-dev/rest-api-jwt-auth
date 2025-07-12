@@ -4,6 +4,8 @@
 
 A secure and containerized RESTful API using Node.js, Express, MongoDB, JWT authentication, Jest for testing, Swagger for documentation, and Docker for smooth local development.
 
+![Demo Catalog](demo.gif)
+
 ---
 
 ## 🚀 Features
